@@ -1,398 +1,296 @@
-# AtlasKit — Global Map SaaS (Starter)
+AtlasKit — Global Map SaaS (Starter)
+====================================
 
-# ====================================
+AtlasKit is a dark, modern SaaS starter. You get:
 
-# 
+*   Marketing pages (Home, Features, Pricing)
+*   An in-app Dashboard
+*   A working global Map Builder powered by Leaflet + OpenStreetMap
+*   Auth modal flow (Sign In / Start Free) wired to a fake session for now
 
-# AtlasKit is a single-page dark SaaS UI that already feels like a full product: pricing page, dashboard, auth modal, and a production-grade Leaflet map builder with global geocoding and embeddable outputs.
+This is designed so you can plug in a real backend (Node.js / Express / Stripe / MySQL) without redesigning the UI.
 
-# 
+Leaflet OpenStreetMap No API Keys Embeddable Maps
 
-# This repo is meant as a starting point for a hosted mapping platform: Leaflet OpenStreetMap No API Keys Copy-paste embeds
+* * *
 
-# 
+1\. TL;DR
+---------
 
-# \*\*TL;DR\*\*
+*   Dark glass UI with radial gradient background and frosted nav bar (no Tailwind required).
+*   Hash-based routing (`#home`, `#pricing`, `#map`, etc.).
+*   **Map Builder**:
+    *   Search any address worldwide (Nominatim + Photon lookup)
+    *   Bias search to current map view or restrict results to the current bounds
+    *   Drop a marker, edit popup text, choose basemap style, toggle scroll/drag behavior
+    *   Generate embed code (full Leaflet snippet or minimal snippet)
+    *   Download a standalone HTML map file
+    *   Create a sharable link with the map config encoded in `?c=`
+*   Dashboard mock shows KPIs, activity, and saved maps.
+*   Auth modal mock simulates sign-in and sends you to the dashboard.
 
-# 
+* * *
 
-# \*   Dark glass UI with radial background and frosted nav (no Tailwind / no framework needed).
+2\. App Structure
+-----------------
 
-# \*   Hash-based routing (`#home`, `#pricing`, `#map`, etc.).
+The entire app runs from one HTML file. Navigation is done with URL hashes. When the hash changes (for example `#pricing`), the router:
 
-# \*   “Map Builder” lets you search any address worldwide, drop a marker, customize zoom / style / behavior, then:
+*   Activates the matching `<section class="page" id="pricing">`
+*   Highlights that item in the nav bar
+*   Lazily initializes page-specific code (Map page, Dashboard page)
 
-# &nbsp;   \*   Copy a Leaflet snippet
+    <main>
+      <section class="page" id="home">...</section>
+      <section class="page" id="features">...</section>
+      <section class="page" id="pricing">...</section>
+      <section class="page" id="dashboard">...</section>
+      <section class="page" id="map">...</section>
+    </main>
+    
 
-# &nbsp;   \*   Copy a minimal embed
+Navbar links are ordinary anchors:
 
-# &nbsp;   \*   Download a full standalone HTML file
+    <a href="#map" data-route>Map Builder</a>
+    
 
-# \*   Dashboard page mock: KPIs, activity feed, saved maps.
+This means it works on static hosting. No framework required.
 
-# \*   Auth modal mock: sign in / sign up (ready to hook to real backend or Stripe signup).
+* * *
 
-# 
+3\. Pages / Views
+-----------------
 
-# 1\\. App Structure
+### 3.1 Home
 
-# -----------------
+The Home section is your hero / marketing splash:
 
-# 
+*   Explains global geocoding and instant embeddable maps
+*   No API keys needed
+*   Primary calls to action: “Open Map Builder” and “See Pricing”
 
-# Everything runs from a single HTML file using hash routing. When the hash changes (for example `#pricing`), the router:
+### 3.2 Features
 
-# 
+Lists what exists now vs roadmap.
 
-# \*   Activates the matching `<section class="page" id="pricing">…`
+*   Current:
+    *   Worldwide address search
+    *   Bias to current view / restrict to bounds
+    *   Leaflet basemap styles (OSM, Carto Light/Dark, Stamen Toner)
+    *   Interactive marker with popup text
+    *   No-iframe and minimal embed snippets
+    *   Downloadable ready-to-use HTML
+*   Roadmap:
+    *   Workspaces and roles
+    *   Saved maps and version history
+    *   Team share links
+    *   Usage analytics
+    *   SSO / MFA
 
-# \*   Highlights that nav link
+### 3.3 Pricing
 
-# \*   Lazily initializes map code and dashboard code only when those pages are opened
+There are three plans. You can hook these directly to Stripe Checkout.
 
-# 
+Plan
 
-# &nbsp;   <main>
+Price
 
-# &nbsp;     <section class="page" id="home">...</section>
+Highlights
 
-# &nbsp;     <section class="page" id="features">...</section>
+**Starter**
 
-# &nbsp;     <section class="page" id="pricing">...</section>
+$0/mo
 
-# &nbsp;     <section class="page" id="dashboard">...</section>
+Unlimited previews, copy embeds, download HTML, email support
 
-# &nbsp;     <section class="page" id="map">...</section>
+**Pro**
 
-# &nbsp;   </main>
+$19/mo
 
-# &nbsp;   
+Saved maps, custom styles, priority support
 
-# 
+**Business**
 
-# Navbar links are normal anchors: `<a href="#map" data-route>Map Builder</a>`. No external router dependency.
+$79/mo
 
-# 
+Team workspaces, SSO/MFA, usage analytics
 
-# 2\\. Pages / Views
+Each card has a button that calls `openSignup()`, which currently opens the auth modal. Later you’ll send that to real signup + Stripe.
 
-# -----------------
+### 3.4 Dashboard
 
-# 
+This is the “app” side:
 
-# \### 2.1 Home
+*   KPI cards: saved maps, total embeds copied, etc.
+*   Recent activity list (“Copied embed for ‘Café Milano’”)
+*   Saved maps panel with quick actions (Open / Share)
 
-# 
+Right now data is mocked in JS:
 
-# Hero section explaining the product: global geocoding, no API keys, instant embeddable maps. Also has CTA buttons: `Open Map Builder` and `See Pricing`.
+*   `#activityList` is filled from a static array
+*   `#mapsList` is populated by `addMockMap()`
 
-# 
+In production:
 
-# \### 2.2 Features
+*   Replace with calls to `/api/activity` and `/api/maps`
+*   Populate KPI counts from real usage metrics per user / per team
 
-# 
+### 3.5 Map Builder
 
-# Bullet list of current abilities (search, draggable marker, basemap styles) and roadmap items (teams, saved maps, analytics, SSO/MFA). This becomes your marketing “Why us / Why now” section.
+This is the core feature. It’s already working.
 
-# 
+*   Type any address and click **Search**
+*   The app queries Nominatim and Photon, merges / dedupes results, and shows up to 5 options
+*   Selecting a result:
+    *   Pans/zooms the map
+    *   Moves the Leaflet marker
+    *   Updates the popup text
+*   Configurable:
+    *   Popup text
+    *   Zoom level
+    *   Basemap style (OSM, Carto, Stamen)
+    *   Map height
+    *   Marker draggable toggle
+    *   Scroll-wheel zoom toggle
+    *   Show / hide zoom controls
+*   Output tools:
+    *   **Generate Embed Code** → fills a code box
+    *   **Copy No-Iframe Snippet** → full Leaflet setup (CSS+JS included)
+    *   **Copy Minimal Snippet** → assumes Leaflet is already on page
+    *   **Download as HTML** → creates a complete standalone HTML map file
+    *   **Copy Share Link** → URL with encoded config in `?c=`
 
-# \### 2.3 Pricing
+All of this matches the SaaS visual language: dark glass panels, subtle borders, rounded corners, pills, and high-contrast white inputs.
 
-# 
+* * *
 
-# Three plans:
+4\. Styling / Theme
+-------------------
 
-# 
+Theme variables (used throughout the UI):
 
-# \*\*Starter — $0/mo\*\*
+    :root {
+      --panel:#12172b;
+      --muted:#8b92a7;
+      --text:#e8ecf7;
+      --border:rgba(255,255,255,.08);
+      --bg-grad: radial-gradient(1200px 600px at 20% 0%, #101736, #0b1020 60%);
+      --brand:#2a66ff;
+      --brand-2:#2253cc;
+    }
+    
 
-# 
+*   **Background:** radial dark blue/purple gradient
+*   **Panels:** subtle glass effect, thin 1px border, soft box shadow
+*   **Navbar:** sticky at top, translucent, blurred backdrop
+*   **Pills:** tiny rounded spans used to badge “Leaflet”, “No API Keys”, etc.
+*   **Buttons:**
+    *   Primary (`.btn`): blue gradient from `--brand` to `--brand-2`
+    *   Secondary (`.btn.secondary`): semi-transparent dark panel style
+    *   Ghost (`.btn.ghost`): transparent outline for quiet actions
+*   **Inputs:** white background, black text. That contrast matters on a dark UI, especially for clients entering addresses.
 
-# \*   Unlimited previews
+* * *
 
-# \*   Copy embed \& download
+5\. Auth Flow (Demo)
+--------------------
 
-# \*   Email support (basic)
+The header has “Sign in” and “Start free”. Both open an overlay modal with blur and dark backdrop. After “Continue”:
 
-# 
+*   We pretend to authenticate
+*   We close the modal
+*   We route you to `#dashboard`
 
-# \*\*Pro — $19/mo\*\*
+To make this real:
 
-# 
+*   POST to `/api/auth/login` or `/api/auth/signup` (Node / Express)
+*   Store JWT or session cookie
+*   Hydrate dashboard from the logged-in user's data
 
-# \*   Saved maps \& share links
+* * *
 
-# \*   Custom styles
+6\. Turning This Into a Real SaaS
+---------------------------------
 
-# \*   Priority support
+### 6.1 Users
 
-# 
+*   Create a `users` table in MySQL/Postgres:
+    *   `id`
+    *   `email`
+    *   `password_hash`
+    *   `plan` (starter / pro / business)
+    *   `created_at`
+*   On signup:
+    *   Hash password (bcrypt/argon2)
+    *   Create Stripe customer
+    *   Default plan = starter
+*   Return a signed JWT and store it locally or in an HttpOnly cookie
 
-# \*\*Business — $79/mo\*\*
+### 6.2 Maps
 
-# 
+*   Create a `maps` table:
+    *   `user_id`
+    *   `lat`, `lng`, `zoom`
+    *   `popup_text`
+    *   `style`, `height_px`
+    *   `created_at`
+*   Add a “Save Map” button in the Map Builder that:
+    *   Requires auth
+    *   POSTs current config to `/api/maps`
+    *   Shows it under “Saved maps” on the dashboard
+*   “Copy Share Link” can eventually be a clean short slug instead of a giant `?c=` param
 
-# \*   Team workspaces \& roles
+### 6.3 Activity / KPIs
 
-# \*   SSO / MFA
+*   Every time the user copies an embed, downloads HTML, or shares a link, send an event to `/api/activity`
+*   Dashboard pulls the latest ~10 events
+*   KPI cards just count totals (maps saved, embeds copied, etc.)
 
-# \*   Usage analytics
+### 6.4 Billing
 
-# 
+*   Wire the Pricing plan buttons to Stripe Checkout
+*   Starter = free, Pro and Business = recurring subscription
+*   Stripe webhooks update the user's `plan` in your DB
 
-# Each pricing card has a button wired to `openSignup()`, which triggers the auth modal and simulates onboarding. You’ll wire that to Stripe Checkout or your own signup route.
+* * *
 
-# 
+7\. Deployment
+--------------
 
-# \### 2.4 Dashboard
+### Static Demo
 
-# 
+*   You can deploy the single HTML file with no backend at all
+*   GitHub Pages, Netlify, Vercel (static), S3 + CloudFront, nginx, etc.
 
-# Internal / “app” feel. Shows:
+### Full SaaS Stack
 
-# 
+*   **Frontend:** this UI (can stay vanilla or migrate to React/Blazor)
+*   **Backend:** Node.js + Express
+    *   `/api/auth`
+    *   `/api/maps`
+    *   `/api/activity`
+    *   Stripe webhooks
+*   **DB:** MySQL or Postgres
+*   **Billing:** Stripe Billing for Starter / Pro / Business tiers
 
-# \*   KPI cards: saved maps, embeds copied, etc.
+* * *
 
-# \*   Recent activity (list of actions like “Copied embed for 'Café Milano'”).
+8\. Credits / Licenses
+----------------------
 
-# \*   Saved maps gallery with quick actions (open / share).
+*   **OpenStreetMap contributors** for map data. Respect attribution and usage policies.
+*   **Tile providers**:
+    *   OpenStreetMap
+    *   Carto (Positron / Dark Matter)
+    *   Stamen (Toner)
+*   **Geocoding**:
+    
+    *   Nominatim (OpenStreetMap)
+    *   Photon (Komoot)
+    
+    Make sure to follow fair-use / rate limit expectations and send a proper `User-Agent` in production.
+*   **Leaflet**: BSD-2-Clause License
 
-# 
+* * *
 
-# You’ll later replace:
-
-# 
-
-# \*   `#kpiSaved`, `#kpiEmbeds`, etc. with live data from your DB.
-
-# \*   `#activityList` and `#mapsList` with a fetch to your API (`/api/activity`, `/api/maps`).
-
-# 
-
-# \### 2.5 Map Builder
-
-# 
-
-# This is the core product from the beginning. You already built it. We just dropped it into the SaaS shell without changing behavior:
-
-# 
-
-# \*   Type an address, click Search.
-
-# \*   We query both Nominatim and Photon (OpenStreetMap ecosystem geocoders), merge results, dedupe, and give you up to 5 matches.
-
-# \*   Choose a result in the dropdown to move the marker and recenter the map.
-
-# \*   Configure:
-
-# &nbsp;   \*   Popup text
-
-# &nbsp;   \*   Zoom
-
-# &nbsp;   \*   Basemap style (OSM, Carto Light/Dark, Stamen Toner)
-
-# &nbsp;   \*   Embed height
-
-# &nbsp;   \*   Options like draggable marker, scroll wheel zoom, show controls
-
-# \*   Click \*\*Generate Embed Code\*\* and copy either:
-
-# &nbsp;   \*   \*\*No-Iframe Snippet\*\* — a full Leaflet setup including CSS/JS tags
-
-# &nbsp;   \*   \*\*Minimal Snippet\*\* — assumes Leaflet is already on the page
-
-# \*   \*\*Download as HTML\*\* creates a complete self-contained HTML file with Leaflet and your marker/location baked in.
-
-# \*   \*\*Copy Share Link\*\* encodes the map config (lat/lng/zoom/etc.) in a `?c=...` query param so you can send someone a “frozen” view.
-
-# 
-
-# The look matches the rest of the SaaS: rounded glass panels, light text on dark gradient, subtle borders, and pill labels.
-
-# 
-
-# 3\\. Styling / Visual Language
-
-# -----------------------------
-
-# 
-
-# Core theme values are defined in `:root`:
-
-# 
-
-# &nbsp;   :root {
-
-# &nbsp;     --panel:#12172b;
-
-# &nbsp;     --muted:#8b92a7;
-
-# &nbsp;     --text:#e8ecf7;
-
-# &nbsp;     --border:rgba(255,255,255,.08);
-
-# &nbsp;     --bg-grad: radial-gradient(1200px 600px at 20% 0%, #101736, #0b1020 60%);
-
-# &nbsp;     --brand:#2a66ff;
-
-# &nbsp;     --brand-2:#2253cc;
-
-# &nbsp;   }
-
-# 
-
-# \*   \*\*Background\*\*: radial dark blue/purple gradient.
-
-# \*   \*\*Panels\*\*: subtle glass cards with a soft linear gradient and thin 1px border in `rgba(255,255,255,.08)`.
-
-# \*   \*\*Navbar\*\*: sticky, translucent (`backdrop-filter: blur(10px)`) with a faint bottom border.
-
-# \*   \*\*Pills\*\*: rounded, 1px border, tiny all-capsish vibe for “Leaflet + OSM”, “No API Keys”, etc.
-
-# \*   \*\*Buttons\*\*:
-
-# &nbsp;   \*   Primary `.btn`: blue vertical gradient `var(--brand) → var(--brand-2)`.
-
-# &nbsp;   \*   Secondary `.btn.secondary`: semi-transparent panel-style button.
-
-# &nbsp;   \*   Ghost `.btn.ghost`: transparent dark outline, for quiet actions.
-
-# \*   \*\*Inputs\*\*: white background / black text on top of the dark UI to maximize contrast and usability. This matters for real clients.
-
-# 
-
-# 4\\. Auth Modal (Demo)
-
-# ---------------------
-
-# 
-
-# The header has “Sign in” and “Start free”. Both open a modal that overlays the app using blur + dark overlay. After “Continue” it just fakes auth and routes to `#dashboard`.
-
-# 
-
-# You’ll eventually replace `fakeAuth()` with:
-
-# 
-
-# \*   POST `/api/auth/login` / `/api/auth/signup` (Node, Express, etc.)
-
-# \*   Store JWT or session cookie
-
-# \*   Pull user data to populate dashboard KPIs and saved maps
-
-# 
-
-# 5\\. Data / Persistence Plan
-
-# ---------------------------
-
-# 
-
-# Out of the box, everything is in-memory / mocked. Below is how you’d graduate it into a real SaaS:
-
-# 
-
-# \### 5.1 Users
-
-# 
-
-# \*   Create a `users` table in MySQL/Postgres (id, email, password\\\_hash, plan, created\\\_at).
-
-# \*   On signup: hash password (bcrypt/argon2), create Stripe customer (if using Stripe), default plan = starter.
-
-# \*   Return a signed JWT; store it in `localStorage` or HttpOnly cookie depending on your security model.
-
-# 
-
-# \### 5.2 Maps
-
-# 
-
-# \*   Create a `maps` table with: `user\_id`, `lat`, `lng`, `zoom`, `popup\_text`, `style`, `height\_px`, `created\_at`.
-
-# \*   When user clicks “Save”, POST to `/api/maps` and insert a row.
-
-# \*   Dashboard `#mapsList` GETs that list and renders the cards.
-
-# \*   “Share link” can just be an encoded config now, or later a short slug pointing to a map in your DB.
-
-# 
-
-# \### 5.3 Activity Feed / KPIs
-
-# 
-
-# \*   Every time someone copies an embed, downloads HTML, or generates a share link, send an event to `/api/activity`.
-
-# \*   Dashboard pulls last N events and aggregates totals.
-
-# 
-
-# 6\\. Deployment
-
-# --------------
-
-# 
-
-# Minimal version (static demo) can be dropped on any static host (Vercel static, Netlify, S3 + CloudFront, nginx, etc.).
-
-# 
-
-# Full SaaS version typically becomes:
-
-# 
-
-# \*   Frontend: this UI (could stay mostly vanilla or be ported to React / Blazor / etc.).
-
-# \*   Backend: Node.js + Express (auth routes, /api/maps, /api/activity, Stripe webhooks).
-
-# \*   DB: MySQL or Postgres for users/maps/activity.
-
-# \*   Billing: Stripe Checkout + Billing for recurring Starter / Pro / Business plans.
-
-# 
-
-# 7\\. TODO / Next Steps
-
-# ---------------------
-
-# 
-
-# \*   \*\*Save Map\*\* button in the Map Builder panel that:
-
-# &nbsp;   \*   Requires auth
-
-# &nbsp;   \*   Sends current config to `/api/maps`
-
-# &nbsp;   \*   Updates dashboard instantly
-
-# \*   “Invite teammate” modal on Dashboard (collect email → POST /api/invite).
-
-# \*   Usage limits per plan (Starter = manual copy only, Pro = can save maps, Business = teams, audit trail, etc.).
-
-# \*   Legal pages (`#privacy`, `#terms`) turned into real routes or separate static pages.
-
-# \*   Hardening geocoding: show rate limit info / polite usage message (Nominatim asks for fair usage and user agent). You should add a custom `User-Agent` + contact email header in production.
-
-# 
-
-# 8\\. Credits / Licenses
-
-# ----------------------
-
-# 
-
-# \*   Maps and tiles: OpenStreetMap contributors (OSM). Tiles from OSM, Carto, Stamen. Respect their usage policies and attribution.
-
-# \*   Geocoding: Nominatim (OpenStreetMap), Photon (Komoot). Follow their terms and fair use guidelines.
-
-# \*   Leaflet: BSD-2-Clause License.
-
-# 
-
-# AtlasKit — dark SaaS starter UI  
-
-# Ready to plug into Node + Stripe + MySQL
-
+© AtlasKit — dark SaaS starter UI. Ready to plug into Node + Stripe + MySQL.
