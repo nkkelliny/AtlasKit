@@ -1,0 +1,389 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>AtlasKit — Global Map SaaS</title>
+  
+  <!-- Leaflet CSS -->
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+    crossorigin=""
+  />
+
+  <style>
+    :root { --panel:#12172b; --muted:#8b92a7; --text:#e8ecf7; --border:rgba(255,255,255,.08); --brand:#2a66ff; --brand-2:#2253cc; }
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0}
+    body{
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      background:radial-gradient(1200px 600px at 20% 0%, #101736, #0b1020 60%);
+      color:var(--text);
+    }
+    a{color:inherit;text-decoration:none}
+    .wrap{max-width:1200px;margin:0 auto;padding:24px;}
+    .grid{display:grid;gap:16px}
+    .grid-2{grid-template-columns:360px 1fr; align-items:start}
+    .panel{background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.02));border:1px solid var(--border);border-radius:14px;overflow:hidden;box-shadow:0 15px 40px rgba(0,0,0,.35)}
+    .panel .head{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
+    .panel .body{padding:14px 16px}
+    .pill{font-size:.78rem;padding:3px 8px;border-radius:999px;border:1px solid var(--border);color:var(--muted)}
+    .btn{border-radius:10px;padding:10px 12px;cursor:pointer;border:1px solid transparent;background:linear-gradient(180deg,var(--brand),var(--brand-2));color:#fff;font-weight:700}
+    .btn.secondary{background:rgba(255,255,255,.06);color:var(--text);border:1px solid var(--border)}
+    .btn.ghost{background:transparent;border:1px solid var(--border);color:var(--text)}
+    .btn.block{display:block;width:100%}
+    .btn-group{display:flex;gap:10px;flex-wrap:wrap}
+    .input, select {width:100%;background:#fff;border:1px solid var(--border);color:#000;border-radius:10px;padding:10px 12px;outline:none}
+    select, select option { color:#000 !important; background-color:#fff !important; }
+    header.top{position:sticky;top:0;z-index:50;background:rgba(8,12,28,.8);backdrop-filter:blur(10px);border-bottom:1px solid var(--border)}
+    .nav{display:flex;align-items:center;justify-content:space-between;gap:16px;max-width:1200px;margin:0 auto;padding:12px 24px}
+    .nav .left{display:flex;align-items:center;gap:14px}
+    .brand{display:flex;align-items:center;gap:10px}
+    .brand .logo{width:36px;height:36px;border-radius:10px;background:linear-gradient(180deg,var(--brand),var(--brand-2));display:grid;place-items:center;font-weight:900}
+    .navlinks{display:flex;gap:14px;color:#c7cee4;flex-wrap:wrap}
+    .navlinks a{padding:6px 10px;border-radius:8px}
+    .navlinks a.active, .navlinks a:hover{background:rgba(255,255,255,.06);color:#fff}
+    footer{border-top:1px solid var(--border);margin-top:48px;padding:24px;color:#a3acc9}
+
+    section.page{display:none;}
+    section.page.active{display:block;}
+
+    .hero{padding:48px 24px 24px}
+    .hero h1{margin:0;font-size:2rem}
+    .hero p{color:#aab2cc;max-width:720px}
+    .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
+    .card{background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.02));border:1px solid var(--border);border-radius:14px;padding:16px}
+
+    .pricing{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
+    .price{padding:18px;border:1px solid var(--border);border-radius:16px;background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.03))}
+    .price h3{margin:6px 0}
+    .price .amt{font-size:2rem;font-weight:900}
+    ul.clean{list-style:none;padding:0;margin:0;display:grid;gap:8px;color:#c6cee6}
+
+    .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+    .kpi{padding:16px;border:1px solid var(--border);border-radius:12px;background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.03))}
+    .kpi .lbl{color:#aab2cc;font-size:.9rem}
+    .kpi .val{font-size:1.6rem;font-weight:900}
+    .flex{display:flex;gap:16px;flex-wrap:wrap}
+
+    .codebox{background:#0c132a;color:#d7e3ff;font-family:ui-monospace,Menlo,Consolas,monospace;border:1px solid var(--border);border-radius:10px;padding:12px;overflow:auto;max-height:260px;white-space:pre}
+
+    /* Map page specific */
+    #mapCanvas{width:100%;height:560px}
+    @media (max-width:960px){#mapCanvas{height:480px}}
+
+    /* Auth modal */
+    .modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(2,4,12,.7);backdrop-filter:blur(6px);z-index:60}
+    .modal.active{display:flex}
+    .modal .box{width:min(560px,92vw)}
+    .hr{height:1px;background:var(--border);margin:10px 0}
+  </style>
+</head>
+<body>
+  <header class="top">
+    <nav class="nav">
+      <div class="left">
+        <a href="#home" class="brand">
+          <div class="logo">A</div>
+          <div>
+            <div style="font-weight:800;line-height:1">AtlasKit</div>
+            <small style="color:#aab2cc">Global Map SaaS</small>
+          </div>
+        </a>
+        <div class="navlinks" id="navlinks">
+          <a href="#home" data-route>Home</a>
+          <a href="#features" data-route>Features</a>
+          <a href="#pricing" data-route>Pricing</a>
+          <a href="#dashboard" data-route>Dashboard</a>
+          <!-- Link to standalone builder -->
+          <a href="/builder" id="builderLink">Map Builder</a>
+        </div>
+      </div>
+      <div class="btn-group">
+        <button class="btn ghost" id="btnSignin">Sign in</button>
+        <button class="btn" id="btnSignup">Start free</button>
+      </div>
+    </nav>
+  </header>
+
+  <main>
+    <!-- HOME -->
+    <section class="page active" id="home">
+      <div class="wrap">
+        <div class="hero">
+          <div class="pill">Leaflet + OpenStreetMap · No API Keys</div>
+          <h1>The fastest way to build, share, and embed maps for any address worldwide.</h1>
+          <p>AtlasKit lets you geocode locations globally, tweak styles and controls, and generate clean, copy-paste map embeds or downloadable HTML in seconds — perfect for landing pages, directories, and dashboards.</p>
+          <div class="btn-group" style="margin-top:10px">
+            <a class="btn" href="/builder">Open Map Builder</a>
+            <a class="btn secondary" href="#pricing" data-route>See Pricing</a>
+          </div>
+        </div>
+
+        <div class="cards" style="margin-top:12px">
+          <div class="card"><strong>Global geocoding</strong><p style="color:#aab2cc">Search any address with Nominatim + Photon fallback, bias to map view, or restrict to bounds.</p></div>
+          <div class="card"><strong>Zero-key setup</strong><p style="color:#aab2cc">No tokens to juggle. Build and ship faster for prototypes or production.</p></div>
+          <div class="card"><strong>Flexible embeds</strong><p style="color:#aab2cc">Copy minimal or full Leaflet snippets, or download as a ready HTML file.</p></div>
+          <div class="card"><strong>Modern SaaS UI</strong><p style="color:#aab2cc">Dark, glassy panels; accessible controls; mobile-ready.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FEATURES -->
+    <section class="page" id="features">
+      <div class="wrap grid" style="gap:20px">
+        <div class="panel">
+          <div class="head"><strong>All the essentials</strong><span class="pill">Developer-friendly</span></div>
+          <div class="body">
+            <ul class="clean">
+              <li>✅ Global address search with optional country codes</li>
+              <li>✅ Bias or restrict results to current view</li>
+              <li>✅ Toggle scroll-wheel, controls, draggable markers</li>
+              <li>✅ Basemap styles: OSM, Carto Light/Dark, Stamen Toner</li>
+              <li>✅ Share links with encoded config</li>
+              <li>✅ Copy minimal or full no-iframe embeds</li>
+              <li>✅ Download standalone HTML</li>
+            </ul>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="head"><strong>For teams</strong><span class="pill">Roadmap</span></div>
+          <div class="body">
+            <ul class="clean">
+              <li>👥 Workspaces & roles</li>
+              <li>🗂 Saved maps & versions</li>
+              <li>🔗 Team share links</li>
+              <li>📊 Usage analytics</li>
+              <li>🔒 SSO / MFA</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PRICING -->
+    <section class="page" id="pricing">
+      <div class="wrap">
+        <h2 style="margin:8px 0">Simple pricing</h2>
+        <p style="color:#aab2cc">Start free. Upgrade when you need collaboration and advanced features.</p>
+        <div class="pricing" style="margin-top:14px">
+          <div class="price">
+            <div class="pill">Starter</div>
+            <h3>Personal projects</h3>
+            <div class="amt">$0</div>
+            <ul class="clean">
+              <li>Unlimited map previews</li>
+              <li>Copy embed & download</li>
+              <li>Email support</li>
+            </ul>
+            <button class="btn block" style="margin-top:12px" onclick="openSignup()">Start free</button>
+          </div>
+          <div class="price" style="border:2px solid var(--brand)">
+            <div class="pill" style="background:rgba(42,102,255,.15);border-color:#2a66ff">Pro</div>
+            <h3>Freelancers</h3>
+            <div class="amt">$19<span style="font-size:1rem">/mo</span></div>
+            <ul class="clean">
+              <li>Saved maps & share links</li>
+              <li>Custom styles</li>
+              <li>Priority support</li>
+            </ul>
+            <button class="btn block" style="margin-top:12px" onclick="openSignup()">Go Pro</button>
+          </div>
+          <div class="price">
+            <div class="pill">Business</div>
+            <h3>Teams & agencies</h3>
+            <div class="amt">$79<span style="font-size:1rem">/mo</span></div>
+            <ul class="clean">
+              <li>Workspaces & roles</li>
+              <li>SSO / MFA</li>
+              <li>Usage analytics</li>
+            </ul>
+            <button class="btn block" style="margin-top:12px" onclick="openSignup()">Contact sales</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- DASHBOARD -->
+    <section class="page" id="dashboard">
+      <div class="wrap grid" style="gap:20px">
+        <div class="kpis">
+          <div class="kpi"><div class="lbl">Saved maps</div><div class="val" id="kpiSaved">12</div></div>
+          <div class="kpi"><div class="lbl">Embeds copied</div><div class="val" id="kpiEmbeds">86</div></div>
+          <div class="kpi"><div class="lbl">Share links</div><div class="val" id="kpiLinks">34</div></div>
+          <div class="kpi"><div class="lbl">Team members</div><div class="val" id="kpiMembers">5</div></div>
+        </div>
+        <div class="flex" style="width:100%">
+          <div class="panel" style="flex:1 1 420px;min-width:320px">
+            <div class="head"><strong>Recent activity</strong></div>
+            <div class="body" id="activity">
+              <div class="pill">Today</div>
+              <ul class="clean" id="activityList" style="margin-top:10px"></ul>
+            </div>
+          </div>
+          <div class="panel" style="flex:1 1 420px;min-width:320px">
+            <div class="head"><strong>Saved maps</strong></div>
+            <div class="body" id="savedMaps">
+              <div class="btn-group" style="margin-bottom:10px">
+                <button class="btn secondary" onclick="addMockMap()">Add mock map</button>
+                <a class="btn" href="/builder">Open builder</a>
+              </div>
+              <div id="mapsList" class="cards"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- MAP BUILDER (SPA demo) -->
+    <section class="page" id="map">
+      <div class="wrap grid grid-2">
+        <section class="panel">
+          <div class="head"><strong>Location & Options</strong></div>
+          <div class="body controls">
+            <div>
+              <label for="address"><strong>Address / Place</strong></label>
+              <div class="row" style="display:grid;grid-template-columns:1fr auto;gap:8px">
+                <input id="address" class="input" placeholder="e.g., 1600 Amphitheatre Pkwy, Mountain View, CA" />
+                <button id="btnGeocode" class="btn">Search</button>
+              </div>
+              <div class="grid3" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:8px">
+                <div>
+                  <label for="country"><strong>Country code</strong> <small>(optional, ISO-2 like us, gb, de)</small></label>
+                  <input id="country" class="input" placeholder="us" maxlength="2" />
+                </div>
+                <div>
+                  <label><strong>Bias to current view</strong></label>
+                  <div class="inline"><input id="biasView" type="checkbox" checked /> <small>Prefer results near map center</small></div>
+                </div>
+                <div>
+                  <label><strong>Restrict to view</strong></label>
+                  <div class="inline"><input id="restrictView" type="checkbox" /> <small>Only return places in visible map</small></div>
+                </div>
+              </div>
+              <div class="row" style="grid-template-columns: 1fr; margin-top:6px;display:grid">
+                <select id="results" class="input" style="display:none"></select>
+              </div>
+              <div id="status" style="font-size:.9rem;color:#8b92a7;margin-top:6px;">Ready.</div>
+            </div>
+
+            <div class="grid2" style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+              <div>
+                <label for="popup">Popup Text</label>
+                <input id="popup" class="input" placeholder="Business name or note" />
+              </div>
+              <div>
+                <label for="zoom">Zoom</label>
+                <select id="zoom" class="input">
+                  <option value="14">14 — neighborhood</option>
+                  <option value="15">15</option>
+                  <option value="16" selected>16 — streets</option>
+                  <option value="17">17 — close</option>
+                  <option value="18">18 — very close</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="grid2" style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+              <div>
+                <label for="style">Basemap Style</label>
+                <select id="style" class="input">
+                  <option value="osm">OpenStreetMap Standard</option>
+                  <option value="carto-light">Carto Light (Positron)</option>
+                  <option value="carto-dark">Carto Dark Matter</option>
+                  <option value="stamen-toner">Stamen Toner</option>
+                </select>
+              </div>
+              <div>
+                <label for="height">Embed Height</label>
+                <select id="height" class="input">
+                  <option value="360">360px</option>
+                  <option value="420">420px</option>
+                  <option value="480" selected>480px</option>
+                  <option value="560">560px</option>
+                  <option value="640">640px</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="inline" style="gap:16px;display:flex;flex-wrap:wrap">
+              <label><input id="draggable" type="checkbox" /> Draggable marker</label>
+              <label><input id="wheel" type="checkbox" /> Scroll-wheel zoom</label>
+              <label><input id="controls" type="checkbox" checked /> Show zoom controls</label>
+              <label title="Optional: after a successful search, auto-enable dragging"><input id="autoDragAfterSearch" type="checkbox" /> Auto-enable drag after search</label>
+            </div>
+
+            <div class="inline" style="display:flex;gap:10px;flex-wrap:wrap">
+              <button id="btnUseCurrent" class="btn secondary" title="Use current map center">Use current view for bias</button>
+              <button id="btnResetWorld" class="btn secondary" title="Reset to world view">World view</button>
+            </div>
+
+            <div class="hr"></div>
+            <div class="inline" style="display:flex;gap:10px;flex-wrap:wrap">
+              <button id="btnGenerate" class="btn">Generate Embed Code</button>
+              <button id="btnDownload" class="btn secondary">Download as HTML</button>
+              <button id="btnCopyLink" class="btn secondary">Copy Share Link</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel" style="display:grid; grid-template-rows:auto auto 1fr;">
+          <div class="head"><strong>Preview</strong></div>
+          <div class="body"><div id="mapCanvas" role="region" aria-label="Map preview"></div></div>
+          <div class="body" style="border-top:1px solid var(--border);">
+            <div class="inline" style="justify-content:space-between;display:flex;flex-wrap:wrap;gap:10px">
+              <strong>Embed Code</strong>
+              <div class="btn-group">
+                <button id="btnCopyNoIframe" class="btn secondary">Copy No-Iframe Snippet</button>
+                <button id="btnCopyMinimal" class="btn secondary">Copy Minimal Snippet</button>
+              </div>
+            </div>
+            <div id="code" class="codebox" style="margin-top:8px;"></div>
+          </div>
+        </section>
+      </div>
+    </section>
+
+  </main>
+
+  <footer>
+    <div class="wrap" style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap">
+      <div>© <span id="year"></span> AtlasKit • <span class="pill">Leaflet + OSM</span></div>
+      <div class="navlinks"><a href="#privacy">Privacy</a><a href="#terms">Terms</a><a href="#pricing" data-route>Pricing</a></div>
+    </div>
+  </footer>
+
+  <!-- Auth modal -->
+  <div class="modal" id="authModal" aria-hidden="true">
+    <div class="panel box">
+      <div class="head"><strong id="authTitle">Sign in</strong><button class="btn ghost" style="margin-left:auto" onclick="closeAuth()">Close</button></div>
+      <div class="body">
+        <div class="grid" style="gap:10px">
+          <div>
+            <label>Email</label>
+            <input class="input" id="authEmail" placeholder="you@company.com" />
+          </div>
+          <div>
+            <label>Password</label>
+            <input class="input" id="authPass" type="password" placeholder="••••••••" />
+          </div>
+          <button class="btn" id="authCta">Continue</button>
+          <div class="hr"></div>
+          <small style="color:#aab2cc">You can sign up or sign in to save maps.</small>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Leaflet JS -->
+  <script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+    crossorigin=""></script>
+
+  <!-- App logic -->
+  <script src="/app.js" type="module"></script>
+</body>
+</html>

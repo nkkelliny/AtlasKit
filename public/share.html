@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>AtlasKit — Shared Map</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <style>
+    html,body{height:100%;margin:0;background:#0b1020;color:#e8ecf7;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;}
+    .wrap{max-width:900px;margin:0 auto;padding:16px}
+    #map{width:100%;height:520px;border-radius:12px;border:1px solid rgba(255,255,255,.08);box-shadow:0 15px 40px rgba(0,0,0,.35)}
+    .hdr{display:flex;justify-content:space-between;align-items:center;margin:10px 0 14px}
+    .pill{font-size:.78rem;padding:3px 8px;border-radius:999px;border:1px solid rgba(255,255,255,.12);color:#a3acc9}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="hdr"><h2 id="title" style="margin:0">Shared Map</h2><span class="pill">Leaflet + OSM</span></div>
+    <div id="map" aria-label="Shared map"></div>
+  </div>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script>
+    (async function(){
+      const slug = location.pathname.split('/').pop();
+      const r = await fetch('/api/share/' + encodeURIComponent(slug));
+      if (!r.ok) { document.querySelector('.wrap').innerHTML = '<p>Map not found or private.</p>'; return; }
+      const { name, cfg_json } = await r.json();
+      const cfg = JSON.parse(cfg_json);
+      document.getElementById('title').textContent = name || 'Shared Map';
+
+      const map = L.map('map', { center:[cfg.lat,cfg.lng], zoom:cfg.zoom||16, scrollWheelZoom:!!cfg.wheel, zoomControl:!!cfg.controls });
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution:'&copy; OpenStreetMap contributors', maxZoom:19 }).addTo(map);
+      const m = L.marker([cfg.lat,cfg.lng], { draggable:false }).addTo(map);
+      if (cfg.popup) m.bindPopup(cfg.popup).openPopup();
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,478 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Map Embed Builder — Global</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <!-- Leaflet CSS -->
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+    crossorigin=""
+  />
+
+  <style>
+    :root { --panel:#12172b; --muted:#8b92a7; --text:#e8ecf7; --border:rgba(255,255,255,.08); --brand:#2a66ff; --brand-2:#2253cc; }
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0}
+    body{
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      background:radial-gradient(1200px 600px at 20% 0%, #101736, #0b1020 60%);
+      color:var(--text);
+    }
+    a{color:inherit;text-decoration:none}
+
+    /* Top nav (same look as index.html) */
+    header.top{position:sticky;top:0;z-index:50;background:rgba(8,12,28,.8);backdrop-filter:blur(10px);border-bottom:1px solid var(--border)}
+    .nav{display:flex;align-items:center;justify-content:space-between;gap:16px;max-width:1200px;margin:0 auto;padding:12px 24px}
+    .nav .left{display:flex;align-items:center;gap:14px}
+    .brand{display:flex;align-items:center;gap:10px}
+    .brand .logo{width:36px;height:36px;border-radius:10px;background:linear-gradient(180deg,var(--brand),var(--brand-2));display:grid;place-items:center;font-weight:900}
+    .navlinks{display:flex;gap:14px;color:#c7cee4;flex-wrap:wrap}
+    .navlinks a{padding:6px 10px;border-radius:8px}
+    .navlinks a.active, .navlinks a:hover{background:rgba(255,255,255,.06);color:#fff}
+    .btn{border-radius:10px;padding:10px 12px;cursor:pointer;border:1px solid transparent;background:linear-gradient(180deg,var(--brand),var(--brand-2));color:#fff;font-weight:700}
+    .btn.secondary{background:rgba(255,255,255,.06);color:var(--text);border:1px solid var(--border)}
+    .btn.ghost{background:transparent;border:1px solid var(--border);color:var(--text)}
+    .btn-group{display:flex;gap:10px;flex-wrap:wrap}
+
+    /* Builder layout */
+    .wrap{max-width:1200px;margin:0 auto;padding:24px;display:grid;gap:16px;grid-template-columns:360px 1fr}
+    .page-head{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between}
+    .panel{background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.02));border:1px solid var(--border);border-radius:14px;overflow:hidden;box-shadow:0 15px 40px rgba(0,0,0,.35)}
+    .panel .head{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
+    .panel .body{padding:14px 16px}
+    #map{width:100%;height:560px}
+    .controls{display:grid;gap:10px}
+    .row{display:grid;grid-template-columns:1fr auto;gap:8px}
+    .grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+    .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+    .input, select {
+      width:100%;
+      background:#fff; /* light input for contrast */
+      border:1px solid var(--border);
+      color:#000; /* black text */
+      border-radius:10px;
+      padding:10px 12px;
+      outline:none;
+    }
+    select, select option { color:#000 !important; background-color:#fff !important; }
+    label small{color:var(--muted)}
+    .pill{font-size:.78rem;padding:3px 8px;border-radius:999px;border:1px solid var(--border);color:var(--muted)}
+    .inline{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+    .hr{height:1px;background:var(--border);margin:10px 0}
+    .codebox{background:#0c132a;color:#d7e3ff;font-family:ui-monospace,Menlo,Consolas,monospace;border:1px solid var(--border);border-radius:10px;padding:12px;overflow:auto;max-height:260px;white-space:pre}
+
+    /* Footer */
+    footer{border-top:1px solid var(--border);margin-top:32px;padding:24px;color:#a3acc9}
+    .footwrap{max-width:1200px;margin:0 auto;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+
+    @media (max-width:960px){.wrap{grid-template-columns:1fr}#map{height:480px}}
+  </style>
+</head>
+<body>
+
+  <!-- NAVBAR -->
+  <header class="top">
+    <nav class="nav">
+      <div class="left">
+        <a href="/#home" class="brand">
+          <div class="logo">A</div>
+          <div>
+            <div style="font-weight:800;line-height:1">AtlasKit</div>
+            <small style="color:#aab2cc">Global Map SaaS</small>
+          </div>
+        </a>
+        <div class="navlinks">
+          <a href="/">Home</a>
+          <a href="/#features">Features</a>
+          <a href="/#pricing">Pricing</a>
+          <a href="/#dashboard">Dashboard</a>
+          <a href="/builder.html" class="active">Map Builder</a>
+        </div>
+      </div>
+      <div class="btn-group">
+        <a class="btn ghost" href="/#home">Sign in</a>
+        <a class="btn" href="/#pricing">Start free</a>
+      </div>
+    </nav>
+  </header>
+
+  <!-- BUILDER -->
+  <div class="wrap">
+    <div class="page-head">
+      <div>
+        <h1 style="margin:0;font-size:1.1rem;">Map Embed Builder (Global)</h1>
+        <div style="color:#8b92a7">Search any address worldwide. Shareable links & copy-paste embeds.</div>
+      </div>
+      <div class="inline">
+        <span class="pill">Leaflet + OpenStreetMap</span>
+        <span class="pill">No API keys</span>
+        <span class="pill">SEO-friendly</span>
+      </div>
+    </div>
+
+    <!-- LEFT: Controls -->
+    <section class="panel">
+      <div class="head"><strong>Location & Options</strong></div>
+      <div class="body controls">
+        <div>
+          <label for="address"><strong>Address / Place</strong></label>
+          <div class="row">
+            <input id="address" class="input" placeholder="e.g., 1600 Amphitheatre Pkwy, Mountain View, CA" />
+            <button id="btnGeocode" class="btn">Search</button>
+          </div>
+
+          <!-- Global search controls -->
+          <div class="grid3">
+            <div>
+              <label for="country"><strong>Country code</strong> <small>(optional, ISO-2 like us, gb, de)</small></label>
+              <input id="country" class="input" placeholder="us" maxlength="2" />
+            </div>
+            <div>
+              <label><strong>Bias to current view</strong></label>
+              <div class="inline"><input id="biasView" type="checkbox" checked /> <small>Prefer results near map center</small></div>
+            </div>
+            <div>
+              <label><strong>Restrict to view</strong></label>
+              <div class="inline"><input id="restrictView" type="checkbox" /> <small>Only return places in visible map</small></div>
+            </div>
+          </div>
+
+          <!-- Results dropdown (top 5 matches) -->
+          <div class="row" style="grid-template-columns: 1fr; margin-top:6px;">
+            <select id="results" class="input" style="display:none"></select>
+          </div>
+          <div id="status" style="font-size:.9rem;color:#8b92a7;margin-top:6px;">Ready.</div>
+        </div>
+
+        <div class="grid2">
+          <div>
+            <label for="popup">Popup Text</label>
+            <input id="popup" class="input" placeholder="Business name or note" />
+          </div>
+          <div>
+            <label for="zoom">Zoom</label>
+            <select id="zoom" class="input">
+              <option value="14">14 — neighborhood</option>
+              <option value="15">15</option>
+              <option value="16" selected>16 — streets</option>
+              <option value="17">17 — close</option>
+              <option value="18">18 — very close</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid2">
+          <div>
+            <label for="style">Basemap Style</label>
+            <select id="style" class="input">
+              <option value="osm">OpenStreetMap Standard</option>
+              <option value="carto-light">Carto Light (Positron)</option>
+              <option value="carto-dark">Carto Dark Matter</option>
+              <option value="stamen-toner">Stamen Toner</option>
+            </select>
+          </div>
+          <div>
+            <label for="height">Embed Height</label>
+            <select id="height" class="input">
+              <option value="360">360px</option>
+              <option value="420">420px</option>
+              <option value="480" selected>480px</option>
+              <option value="560">560px</option>
+              <option value="640">640px</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="inline" style="gap:16px;">
+          <label><input id="draggable" type="checkbox" /> Draggable marker</label>
+          <label><input id="wheel" type="checkbox" /> Scroll-wheel zoom</label>
+          <label><input id="controls" type="checkbox" checked /> Show zoom controls</label>
+          <label title="Optional: after a successful search, auto-enable dragging"><input id="autoDragAfterSearch" type="checkbox" /> Auto-enable drag after search</label>
+        </div>
+
+        <div class="inline">
+          <button id="btnUseCurrent" class="btn secondary" title="Use current map center">Use current view for bias</button>
+          <button id="btnResetWorld" class="btn secondary" title="Reset to world view">World view</button>
+        </div>
+
+        <div class="hr"></div>
+        <div class="inline">
+          <button id="btnGenerate" class="btn">Generate Embed Code</button>
+          <button id="btnDownload" class="btn secondary">Download as HTML</button>
+          <button id="btnCopyLink" class="btn secondary">Copy Share Link</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- RIGHT: Map + Output -->
+    <section class="panel" style="display:grid; grid-template-rows:auto auto 1fr;">
+      <div class="head"><strong>Preview</strong></div>
+      <div class="body"><div id="map" role="region" aria-label="Map preview"></div></div>
+      <div class="body" style="border-top:1px solid var(--border);">
+        <div class="inline" style="justify-content:space-between;flex-wrap:wrap;gap:8px">
+          <strong>Embed Code</strong>
+          <div class="inline">
+            <button id="btnCopyNoIframe" class="btn secondary">Copy No-Iframe Snippet</button>
+            <button id="btnCopyMinimal" class="btn secondary">Copy Minimal Snippet</button>
+          </div>
+        </div>
+        <div id="code" class="codebox" style="margin-top:8px;"></div>
+      </div>
+    </section>
+  </div>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="footwrap">
+      <div>© <span id="year"></span> AtlasKit • <span class="pill">Leaflet + OSM</span></div>
+      <div class="navlinks">
+        <a href="/#privacy">Privacy</a>
+        <a href="/#terms">Terms</a>
+        <a href="/#pricing">Pricing</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Leaflet JS -->
+  <script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+    crossorigin=""></script>
+
+  <script>
+    // Footer year
+    document.getElementById('year').textContent = new Date().getFullYear();
+
+    // ---------- helpers ----------
+    const $ = s => document.querySelector(s);
+    const status = (t, color='#8b92a7') => { const el = $('#status'); if (!el) return; el.textContent = t; el.style.color = color; };
+    const toast = (t) => { const d = document.createElement('div'); d.textContent = t;
+      Object.assign(d.style,{position:'fixed',bottom:'16px',right:'16px',background:'rgba(20,120,255,.95)',color:'#fff',padding:'10px 12px',borderRadius:'10px',boxShadow:'0 10px 20px rgba(0,0,0,.35)',zIndex:9999,fontWeight:'700'}); 
+      document.body.appendChild(d); setTimeout(()=>d.remove(),1600); 
+    };
+    const encodeCfg = o => encodeURIComponent(JSON.stringify(o));
+    const decodeCfg = s => { try { return JSON.parse(decodeURIComponent(s)); } catch { return null; } };
+
+    // ---------- basemaps ----------
+    const sources = {
+      'osm': { url:'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', att:'&copy; OpenStreetMap contributors', maxZoom:19 },
+      'carto-light': { url:'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', att:'&copy; OpenStreetMap contributors &copy; CARTO', maxZoom:20 },
+      'carto-dark': { url:'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', att:'&copy; OpenStreetMap contributors &copy; CARTO', maxZoom:20 },
+      'stamen-toner': { url:'https://stamen-tiles.a.ssl.fastly.net/toner/{z}/{x}/{y}.png', att:'Map tiles by Stamen Design; Data &copy; OpenStreetMap', maxZoom:20 }
+    };
+
+    // ---------- init map (world view) ----------
+    const map = L.map('map', { center:[20, 0], zoom:2, scrollWheelZoom:false, zoomControl:true });
+    let tileLayer = L.tileLayer(sources['osm'].url, { attribution:sources['osm'].att, maxZoom:sources['osm'].maxZoom }).addTo(map);
+    const marker = L.marker([20, 0], { draggable:false }).addTo(map).bindPopup('Your location').openPopup();
+
+    function setTiles(key){ const s=sources[key]||sources['osm']; if(tileLayer) tileLayer.remove(); tileLayer=L.tileLayer(s.url,{attribution:s.att,maxZoom:s.maxZoom}); tileLayer.addTo(map); }
+    function setEmbedHeight(h){ document.getElementById('map').style.height = h + 'px'; map.invalidateSize(); }
+
+    map.on('click', e => { marker.setLatLng(e.latlng); });
+
+    // controls
+    document.getElementById('wheel').addEventListener('change', e => map.scrollWheelZoom[e.target.checked?'enable':'disable']());
+    document.getElementById('controls').addEventListener('change', e => { if(e.target.checked){ if(!map.zoomControl._map) L.control.zoom().addTo(map);} else { map.zoomControl?.remove?.(); }});
+    document.getElementById('draggable').addEventListener('change', e => marker.dragging?.[e.target.checked?'enable':'disable']());
+    document.getElementById('style').addEventListener('change', e => setTiles(e.target.value));
+    document.getElementById('height').addEventListener('change', e => setEmbedHeight(e.target.value));
+
+    // ---------- global geocoding ----------
+    function buildNominatimUrl(q){
+      const params = new URLSearchParams({ format:'json', q, limit:'5', addressdetails:'1' });
+      const cc = (document.getElementById('country').value||'').trim().toLowerCase();
+      if (cc) params.set('countrycodes', cc);
+      const bias = document.getElementById('biasView').checked;
+      const restrict = document.getElementById('restrictView').checked;
+      if (bias || restrict){
+        const b = map.getBounds();
+        const left = b.getWest(), right = b.getEast(), top = b.getNorth(), bottom = b.getSouth();
+        params.set('viewbox', `${left},${top},${right},${bottom}`);
+        if (restrict) params.set('bounded', '1');
+      }
+      return `https://nominatim.openstreetmap.org/search?${params.toString()}`;
+    }
+    function buildPhotonUrl(q){
+      const params = new URLSearchParams({ q, limit:'5', lang:'en' });
+      if (document.getElementById('biasView').checked){
+        const c = map.getCenter();
+        params.set('lat', String(c.lat));
+        params.set('lon', String(c.lng));
+      }
+      return `https://photon.komoot.io/api/?${params.toString()}`;
+    }
+    async function geocodeNominatimList(q){
+      const r = await fetch(buildNominatimUrl(q), { headers:{ 'Accept-Language':'en' }});
+      if (!r.ok) throw new Error('Nominatim '+r.status);
+      const data = await r.json();
+      return (data||[]).map(d => ({ source:'nominatim', label:d.display_name, lat:parseFloat(d.lat), lng:parseFloat(d.lon) }));
+    }
+    async function geocodePhotonList(q){
+      const r = await fetch(buildPhotonUrl(q));
+      if (!r.ok) throw new Error('Photon '+r.status);
+      const data = await r.json();
+      const feats = (data&&data.features)||[];
+      return feats.map(f => ({
+        source:'photon',
+        label:[f.properties.name, f.properties.city, f.properties.state, f.properties.country].filter(Boolean).join(', '),
+        lat:f.geometry.coordinates[1],
+        lng:f.geometry.coordinates[0]
+      }));
+    }
+    async function geocodeList(q){
+      let out = [];
+      try { out = out.concat(await geocodeNominatimList(q)); } catch(e){}
+      try { out = out.concat(await geocodePhotonList(q)); } catch(e){}
+      const uniq=[]; out.forEach(c=>{ if(!uniq.some(u=>Math.abs(u.lat-c.lat)<1e-5 && Math.abs(u.lng-c.lng)<1e-5)) uniq.push(c); });
+      return uniq.slice(0,5);
+    }
+
+    // ---------- search UX ----------
+    const resultsEl = document.getElementById('results');
+    document.getElementById('btnGeocode').addEventListener('click', async ()=>{
+      const q = document.getElementById('address').value.trim(); if(!q){ document.getElementById('address').focus(); return; }
+      const btn = document.getElementById('btnGeocode'); const prev = btn.textContent;
+      btn.textContent='Searching…'; btn.disabled=true; status('Searching…','#a7b7ff');
+      resultsEl.style.display='none'; resultsEl.innerHTML = '';
+      try{
+        const list = await geocodeList(q);
+        if(!list.length) throw new Error('No results');
+        list.forEach((item,i)=>{ const opt=document.createElement('option'); opt.value=String(i); opt.textContent=item.label; resultsEl.appendChild(opt); });
+        resultsEl.style.display=''; resultsEl.dataset.payload = JSON.stringify(list);
+        resultsEl.selectedIndex = 0; applyResult(list[0]);
+        status('Found '+list.length+' match(es). Adjust if needed.','#7ef7c9');
+      }catch(e){
+        status('Address not found. Try refining (add city/region or country).','#ffb3b3');
+        toast('No match found');
+      }finally{
+        btn.textContent=prev; btn.disabled=false;
+      }
+    });
+    resultsEl.addEventListener('change', ()=>{
+      try{
+        const list = JSON.parse(resultsEl.dataset.payload||'[]');
+        const item = list[resultsEl.selectedIndex];
+        if(item) applyResult(item);
+      }catch{}
+    });
+    function applyResult(item){
+      const zoom = parseInt(document.getElementById('zoom').value||'16',10);
+      marker.setLatLng([item.lat,item.lng]);
+      map.setView([item.lat,item.lng], zoom, { animate:true });
+      const text = (document.getElementById('popup').value.trim() || item.label);
+      marker.bindPopup(text).openPopup();
+      if (document.getElementById('autoDragAfterSearch').checked && marker.dragging){ marker.dragging.enable(); document.getElementById('draggable').checked = true; }
+    }
+
+    // helpers
+    document.getElementById('btnUseCurrent').addEventListener('click', ()=>{ toast('Search will prefer current view'); });
+    document.getElementById('btnResetWorld').addEventListener('click', ()=>{ map.setView([20,0], 2); marker.setLatLng([20,0]); });
+    document.getElementById('address').addEventListener('keydown', e=>{ if(e.key==='Enter') document.getElementById('btnGeocode').click(); });
+
+    // ---------- embed config ----------
+    function currentConfig(){
+      return {
+        lat: marker.getLatLng().lat, lng: marker.getLatLng().lng,
+        zoom: map.getZoom(), popup: document.getElementById('popup').value.trim(),
+        style: document.getElementById('style').value, height: document.getElementById('height').value,
+        wheel: document.getElementById('wheel').checked, controls: document.getElementById('controls').checked, draggable: document.getElementById('draggable').checked
+      };
+    }
+
+    // ---------- embed generators ----------
+    function noIframeSnippet(cfg){
+      var s =
+'<!-- Map Embed (Leaflet) -->\n' +
+'<div id="myMap" style="width:100%;height:' + cfg.height + 'px;border-radius:12px;"></div>\n' +
+'<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">\n' +
+'<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></' + 'script>\n' +
+'<script>\n' +
+'(function(){\n' +
+'  var cfg = ' + JSON.stringify(cfg) + ';\n' +
+"  var src = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';\n" +
+"  var att = '&copy; OpenStreetMap contributors';\n" +
+"  var map = L.map('myMap', { center:[cfg.lat,cfg.lng], zoom:cfg.zoom, scrollWheelZoom:!!cfg.wheel, zoomControl:!!cfg.controls });\n" +
+'  L.tileLayer(src, { attribution: att, maxZoom: 19 }).addTo(map);\n' +
+'  var m = L.marker([cfg.lat,cfg.lng], { draggable: !!cfg.draggable }).addTo(map);\n';
+      if (cfg.popup) s += '  m.bindPopup(' + JSON.stringify(cfg.popup) + ').openPopup();\n';
+      s += '})();\n</' + 'script>';
+      return s;
+    }
+    function minimalSnippet(cfg){
+      var p = cfg.popup ? '  m.bindPopup(' + JSON.stringify(cfg.popup) + ').openPopup();\n' : '';
+      return (
+        '<div id="myMap" style="width:100%;height:' + cfg.height + 'px;"></div>\n' +
+        '<script>\n' +
+        "  var map = L.map('myMap', { center:[" + cfg.lat.toFixed(6) + "," + cfg.lng.toFixed(6) + "], zoom:" + cfg.zoom + ", scrollWheelZoom:" + (!!cfg.wheel) + ", zoomControl:" + (!!cfg.controls) + " });\n" +
+        "  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution:'&copy; OpenStreetMap contributors', maxZoom:19 }).addTo(map);\n" +
+        "  var m = L.marker([" + cfg.lat.toFixed(6) + "," + cfg.lng.toFixed(6) + "], { draggable:" + (!!cfg.draggable) + " }).addTo(map);\n" +
+        p + '</' + 'script>'
+      );
+    }
+    function downloadableHTML(cfg){
+      var p = cfg.popup ? '      m.bindPopup(' + JSON.stringify(cfg.popup) + ').openPopup();\n' : '';
+      return (
+'<!doctype html>\n<html lang="en">\n<head>\n  <meta charset="utf-8" />\n  <title>Embedded Map</title>\n  <meta name="viewport" content="width=device-width, initial-scale=1" />\n  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">\n  <style>html,body{height:100%;margin:0}#map{height:' + cfg.height + 'px;width:100%;border-radius:12px;border:1px solid #e6e6e9}</style>\n</head>\n<body>\n  <div id="map" aria-label="Embedded map"></div>\n  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></' + 'script>\n  <script>\n    (function(){\n      var cfg = ' + JSON.stringify(cfg) + ';\n      var map = L.map(' + "'map'" + ', { center:[cfg.lat,cfg.lng], zoom:cfg.zoom, scrollWheelZoom:!!cfg.wheel, zoomControl:!!cfg.controls });\n      L.tileLayer(' + "'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'" + ', { attribution:' + "'&copy; OpenStreetMap contributors'" + ', maxZoom:19 }).addTo(map);\n      var m = L.marker([cfg.lat,cfg.lng], { draggable: !!cfg.draggable }).addTo(map);\n' + p + '    })();\n  </' + 'script>\n</body>\n</html>'
+      );
+    }
+    function refreshCodeBox(){ document.getElementById('code').textContent = noIframeSnippet(currentConfig()); }
+
+    // generate/copy/download/share
+    document.getElementById('btnGenerate').addEventListener('click', refreshCodeBox);
+    document.getElementById('btnCopyNoIframe').addEventListener('click', () => navigator.clipboard.writeText(noIframeSnippet(currentConfig())).then(()=>toast('Copied')));
+    document.getElementById('btnCopyMinimal').addEventListener('click', () => navigator.clipboard.writeText(minimalSnippet(currentConfig())).then(()=>toast('Copied')));
+    document.getElementById('btnDownload').addEventListener('click', () => {
+      const blob = new Blob([downloadableHTML(currentConfig())], { type: 'text/html' });
+      const url = URL.createObjectURL(blob); 
+      const a = document.createElement('a'); a.href = url; a.download = 'map-embed.html';
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(()=>URL.revokeObjectURL(url), 1200);
+    });
+    document.getElementById('btnCopyLink').addEventListener('click', () => {
+      const link = location.origin + location.pathname + '?c=' + encodeCfg(currentConfig());
+      navigator.clipboard.writeText(link).then(()=>toast('Share link copied'));
+    });
+
+    // load from sharable link (?c=)
+    (function(){
+      const c = new URLSearchParams(location.search).get('c');
+      if (c) {
+        const cfg = decodeCfg(c);
+        if (cfg && typeof cfg.lat==='number' && typeof cfg.lng==='number'){
+          map.setView([cfg.lat, cfg.lng], cfg.zoom||16);
+          marker.setLatLng([cfg.lat, cfg.lng]);
+          if (cfg.popup) marker.bindPopup(cfg.popup).openPopup();
+          document.getElementById('popup').value = cfg.popup || '';
+          document.getElementById('style').value = cfg.style || 'osm';
+          document.getElementById('height').value = String(cfg.height || 480);
+          document.getElementById('wheel').checked = !!cfg.wheel;
+          document.getElementById('controls').checked = cfg.controls !== false;
+          document.getElementById('draggable').checked = !!cfg.draggable;
+          setTiles(cfg.style || 'osm');
+          setEmbedHeight(cfg.height || 480);
+          map.scrollWheelZoom[document.getElementById('wheel').checked ? 'enable' : 'disable']();
+          if (document.getElementById('controls').checked){ if(!map.zoomControl._map) L.control.zoom().addTo(map);} else { map.zoomControl?.remove?.(); }
+          refreshCodeBox();
+          status('Loaded from link', '#7ef7c9');
+          return;
+        }
+      }
+      document.getElementById('popup').value = '';
+      refreshCodeBox();
+
+      // Example: let’s say user clicks “Save to Account”
+document.getElementById('btnSave')?.addEventListener('click', () => {
+  const name = prompt('Map name?');
+  if (!name) return;
+  const cfg = currentConfig(); // from builder.js
+  window.saveMapToAccount?.(name, cfg, 'unlisted');
+});
+    })();
+  </script>
+</body>
+</html>
