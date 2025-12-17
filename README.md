@@ -3,6 +3,8 @@ AtlasKit — Global Map SaaS (Starter)
 
 ![Build Status](https://img.shields.io/badge/build-passing-brightgreen.svg) ![Version](https://img.shields.io/badge/version-1.0.0-blue.svg) ![Platform](https://img.shields.io/badge/platform-Web-lightgrey.svg)
 
+<img src="https://github.com/Hubbzy/AtlasKit/blob/main/public/atlaskit_screenshot.jpg">
+
 AtlasKit is a dark, modern SaaS starter. You get:
 
 *   Marketing pages (Home, Features, Pricing)
